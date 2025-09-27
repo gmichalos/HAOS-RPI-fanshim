@@ -1,0 +1,20 @@
+# Git ignore of HA-RPI-fanshim
+# Made by Melvin Campos Casares
+# See repository at https://github.com/melvinmajor/HA-RPI-fanshim
+#================================================================
+
+# Python virtual environment
+*.pyc
+__pycache__
+*/.env/*
+*/.mypy_cache/*
+.cache/
+
+# IDE folders and files
+*/.idea/*
+.idea/*
+workspace.code-workspace
+
+# Other unnecessary files
+cloc-codeCount.png
+tmp.txt
