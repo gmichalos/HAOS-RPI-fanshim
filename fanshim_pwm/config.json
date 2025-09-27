@@ -1,24 +1,26 @@
 {
   "name": "FanSHIM PWM",
-  "version": "1.0",
+  "version": "1.1",
   "slug": "fanshim_pwm",
+  "author": "Melvin Campos Casares",
+  "url": "https://github.com/melvinmajor/HA-RPI-fanshim",
   "description": "Control the FanSHIM with PWM on Raspberry Pi 4",
   "arch": ["aarch64"],
   "startup": "before",
   "boot": "auto",
   "options": {
-    "temp_min": 40,
-    "temp_max": 65,
-    "pwm_period": 2,
-    "check_interval": 10,
-    "log_lines": 50
+    "temp_min": 45,
+    "temp_max": 75,
+    "pwm_min": 20,
+    "pwm_max": 100,
+    "check_interval": 5
   },
   "schema": {
     "temp_min": "int",
     "temp_max": "int",
-    "pwm_period": "int",
-    "check_interval": "int",
-    "log_lines": "int"
+    "pwm_min": "int",
+    "pwm_max": "int",
+    "check_interval": "int"
   },
   "map": ["config:rw", "data:rw"],
   "host_network": true,

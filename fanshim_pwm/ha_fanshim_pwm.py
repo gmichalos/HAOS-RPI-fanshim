@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
+import os
+import json
 import time
 import RPi.GPIO as GPIO
 
 PIN_FAN = 18  # PWM pin
 
-TEMP_LOW = 45
-TEMP_HIGH = 75
-PWM_MIN = 20
-PWM_MAX = 100
-SLEEP_TIME = 5
+# Load config from config.json
+with open("/data/options.json") as f:
+    options = json.load(f)
+
+TEMP_LOW = options.get("temp_min", 45)
+TEMP_HIGH = options.get("temp_max", 75)
+PWM_MIN = options.get("pwm_min", 20)
+PWM_MAX = options.get("pwm_max", 100)
+SLEEP_TIME = options.get("check_interval", 5)
+
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_FAN, GPIO.OUT)
