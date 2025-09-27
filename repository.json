@@ -1,0 +1,6 @@
+{
+  "name": "HA-RPI-fanshim",
+  "slug": "ha_rpi_fanshim",
+  "description": "FanSHIM PWM Add-on for Home Assistant",
+  "url": "https://github.com/melvinmajor/HA-RPI-fanshim"
+}
