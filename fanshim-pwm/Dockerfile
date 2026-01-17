@@ -4,20 +4,10 @@ FROM $BUILD_FROM
 # Install packages
 RUN apk add --no-cache \
     python3 \
-    py3-pip \
-    gcc \
-    musl-dev \
-    python3-dev \
-    linux-headers \
-    git
+    py3-pip
 
-# Clone and install fanshim-python library from the library subdirectory
-RUN cd /tmp && \
-    git clone https://github.com/pimoroni/fanshim-python.git && \
-    cd fanshim-python/library && \
-    python3 -m pip install --break-system-packages . && \
-    cd ../.. && \
-    rm -rf fanshim-python
+# Install Python pigpio library
+RUN pip3 install --break-system-packages --no-cache-dir pigpio
 
 # Copy Python script
 COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
