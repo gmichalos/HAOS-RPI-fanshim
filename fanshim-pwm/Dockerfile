@@ -19,8 +19,6 @@ RUN pip3 install --break-system-packages --no-cache-dir \
     RPi.GPIO \
     gpiod
 
-# Copy run script
+# Copy data
 COPY run.sh /
 RUN chmod a+x /run.sh
-
-# No CMD needed - s6-overlay will handle it
