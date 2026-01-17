@@ -1,20 +1,21 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base-python:latest
+ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Install packages
 RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    gcc \
+    musl-dev \
+    python3-dev \
     libgpiod \
     libgpiod-dev \
-    gcc \
-    musl-dev
+    py3-psutil
 
 # Install Python packages
-RUN pip3 install --no-cache-dir \
+RUN pip3 install --break-system-packages --no-cache-dir \
     RPi.GPIO \
-    gpiod \
-    psutil
+    gpiod
 
-# Copy files
-COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
-COPY run.sh /run.sh
-RUN chmod +x /run.sh
+# Copy Python script
+COPY ha_fanshim_pwm.py /ha_fanshim_pwm.py
