@@ -11,12 +11,12 @@ RUN apk add --no-cache \
     linux-headers \
     git
 
-# Clone and install fanshim-python library
+# Clone and install fanshim-python library from the library subdirectory
 RUN cd /tmp && \
     git clone https://github.com/pimoroni/fanshim-python.git && \
-    cd fanshim-python && \
+    cd fanshim-python/library && \
     python3 -m pip install --break-system-packages . && \
-    cd .. && \
+    cd ../.. && \
     rm -rf fanshim-python
 
 # Copy Python script
