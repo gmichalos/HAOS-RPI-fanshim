@@ -4,6 +4,7 @@ import time
 import sys
 import gpiod
 import threading
+import os
 
 PIN_FAN = 18
 
@@ -69,8 +70,31 @@ def main():
     print(f"Check interval: {SLEEP_TIME}s")
     sys.stdout.flush()
     
-    # Initialize GPIO
-    chip = gpiod.Chip('gpiochip0')
+    # Try to find GPIO chip
+    chip = None
+    chip_paths = ['/dev/gpiochip0', 'gpiochip0', '/dev/gpiochip1', 'gpiochip1']
+    
+    print("Looking for GPIO chip...")
+    for path in chip_paths:
+        try:
+            print(f"  Trying {path}...")
+            chip = gpiod.Chip(path)
+            print(f"  Found GPIO chip at {path}!")
+            break
+        except Exception as e:
+            print(f"  Not found: {e}")
+    
+    if chip is None:
+        print("ERROR: No GPIO chip found!")
+        print("Available devices in /dev:")
+        try:
+            for item in os.listdir('/dev'):
+                if 'gpio' in item.lower():
+                    print(f"  /dev/{item}")
+        except:
+            pass
+        sys.exit(1)
+    
     fan_line = chip.get_line(PIN_FAN)
     fan_line.request(consumer="fanshim", type=gpiod.LINE_REQ_DIR_OUT)
     
