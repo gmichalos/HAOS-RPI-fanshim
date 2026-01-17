@@ -78,10 +78,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
-
-**If that still clicks**, the issue is that even the Pimoroni library uses software PWM. The **best solution** for the original FanSHIM to avoid clicking is:
-
-**Increase the minimum PWM to 40-50%** - the fan physically can't run smoothly below a certain speed. Update your config:
-```
-pwm_min: 40  (or try 50, 60)
