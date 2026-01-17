@@ -1,9 +1,4 @@
-#!/command/with-contenv bashio
+#!/command/with-contenv bash
 
-bashio::log.info "Starting FanSHIM PWM"
+echo "Starting FanSHIM PWM"
 exec python3 -u /app/ha_fanshim_pwm.py
-```
-
-2. Create the file `rootfs/etc/s6-overlay/s6-rc.d/fanshim/type` with just:
-```
-longrun
