@@ -3,6 +3,7 @@ import json
 import time
 import sys
 import gpiod
+from gpiod.line import Direction, Value
 import threading
 import os
 
@@ -30,7 +31,7 @@ class SoftwarePWM:
         self.running = False
         if self.thread:
             self.thread.join()
-        self.line.set_value(0)
+        self.line.set_value(Value.INACTIVE)
     
     def _pwm_loop(self):
         while self.running:
@@ -39,14 +40,14 @@ class SoftwarePWM:
                 off_time = self.period - on_time
                 
                 if on_time > 0:
-                    self.line.set_value(1)
+                    self.line.set_value(Value.ACTIVE)
                     time.sleep(on_time)
                 
                 if off_time > 0 and self.running:
-                    self.line.set_value(0)
+                    self.line.set_value(Value.INACTIVE)
                     time.sleep(off_time)
             else:
-                self.line.set_value(0)
+                self.line.set_value(Value.INACTIVE)
                 time.sleep(self.period)
 
 def main():
@@ -70,36 +71,20 @@ def main():
     print(f"Check interval: {SLEEP_TIME}s")
     sys.stdout.flush()
     
-    # Try to find GPIO chip
-    chip = None
-    chip_paths = ['/dev/gpiochip0', 'gpiochip0', '/dev/gpiochip1', 'gpiochip1']
+    # Open GPIO chip and request line
+    print("Initializing GPIO...")
+    chip = gpiod.Chip('/dev/gpiochip0')
+    line_config = gpiod.LineSettings(direction=Direction.OUTPUT)
+    line_request = chip.request_lines(
+        config={PIN_FAN: line_config},
+        consumer="fanshim"
+    )
     
-    print("Looking for GPIO chip...")
-    for path in chip_paths:
-        try:
-            print(f"  Trying {path}...")
-            chip = gpiod.Chip(path)
-            print(f"  Found GPIO chip at {path}!")
-            break
-        except Exception as e:
-            print(f"  Not found: {e}")
-    
-    if chip is None:
-        print("ERROR: No GPIO chip found!")
-        print("Available devices in /dev:")
-        try:
-            for item in os.listdir('/dev'):
-                if 'gpio' in item.lower():
-                    print(f"  /dev/{item}")
-        except:
-            pass
-        sys.exit(1)
-    
-    fan_line = chip.get_line(PIN_FAN)
-    fan_line.request(consumer="fanshim", type=gpiod.LINE_REQ_DIR_OUT)
+    print("GPIO initialized!")
+    sys.stdout.flush()
     
     # Start software PWM
-    pwm = SoftwarePWM(fan_line, frequency=25000)
+    pwm = SoftwarePWM(line_request, frequency=25000)
     pwm.start(0)
     
     def get_temp():
@@ -138,7 +123,7 @@ def main():
     finally:
         print("Cleaning up...")
         pwm.stop()
-        fan_line.release()
+        line_request.release()
         print("Shutdown complete")
 
 if __name__ == "__main__":
