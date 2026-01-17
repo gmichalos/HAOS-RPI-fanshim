@@ -2,53 +2,7 @@
 import json
 import time
 import sys
-import gpiod
-from gpiod.line import Direction, Value
-import threading
-
-PIN_FAN = 18
-
-class SoftwarePWM:
-    def __init__(self, line_request, pin, frequency=25000):
-        self.line_request = line_request
-        self.pin = pin
-        self.frequency = frequency
-        self.period = 1.0 / frequency
-        self.duty_cycle = 0
-        self.running = False
-        self.thread = None
-        
-    def start(self, duty_cycle=0):
-        self.duty_cycle = duty_cycle
-        self.running = True
-        self.thread = threading.Thread(target=self._pwm_loop, daemon=True)
-        self.thread.start()
-    
-    def set_duty_cycle(self, duty_cycle):
-        self.duty_cycle = max(0, min(100, duty_cycle))
-    
-    def stop(self):
-        self.running = False
-        if self.thread:
-            self.thread.join()
-        self.line_request.set_value(self.pin, Value.INACTIVE)
-    
-    def _pwm_loop(self):
-        while self.running:
-            if self.duty_cycle > 0:
-                on_time = self.period * (self.duty_cycle / 100.0)
-                off_time = self.period - on_time
-                
-                if on_time > 0:
-                    self.line_request.set_value(self.pin, Value.ACTIVE)
-                    time.sleep(on_time)
-                
-                if off_time > 0 and self.running:
-                    self.line_request.set_value(self.pin, Value.INACTIVE)
-                    time.sleep(off_time)
-            else:
-                self.line_request.set_value(self.pin, Value.INACTIVE)
-                time.sleep(self.period)
+from fanshim import FanShim
 
 def main():
     try:
@@ -63,55 +17,50 @@ def main():
     PWM_MIN = options.get("pwm_min", 20)
     PWM_MAX = options.get("pwm_max", 100)
     SLEEP_TIME = options.get("check_interval", 5)
-    PWM_FREQ = options.get("pwm_frequency", 25000)
     
-    print(f"Starting FanSHIM Software PWM Control")
+    print(f"Starting FanSHIM Control (Pimoroni Library with PWM)")
     print(f"Temperature range: {TEMP_LOW}°C - {TEMP_HIGH}°C")
     print(f"PWM range: {PWM_MIN}% - {PWM_MAX}%")
-    print(f"PWM frequency: {PWM_FREQ}Hz") 
     print(f"Check interval: {SLEEP_TIME}s")
     sys.stdout.flush()
     
-    # Open GPIO chip and request line
-    print("Initializing GPIO...")
-    chip = gpiod.Chip('/dev/gpiochip0')
-    line_config = gpiod.LineSettings(direction=Direction.OUTPUT)
-    line_request = chip.request_lines(
-        config={PIN_FAN: line_config},
-        consumer="fanshim"
-    )
-    
-    print("GPIO initialized!")
-    sys.stdout.flush()
-    
-    # Start software PWM
-    pwm = SoftwarePWM(line_request, PIN_FAN, frequency=PWM_FREQ)  
-
-    pwm.start(0)
+    # Initialize FanShim
+    print("Initializing FanShim...")
+    fanshim = FanShim()
     
     def get_temp():
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
             return int(f.read()) / 1000
     
-    def calculate_pwm(temp):
+    def calculate_speed(temp):
         if temp < TEMP_LOW:
             return 0
         elif temp > TEMP_HIGH:
             return PWM_MAX
         else:
             slope = (PWM_MAX - PWM_MIN) / (TEMP_HIGH - TEMP_LOW)
-            return PWM_MIN + slope * (temp - TEMP_LOW)
+            return int(PWM_MIN + slope * (temp - TEMP_LOW))
     
-    print("FanSHIM Software PWM running...")
+    print("FanSHIM running with PWM control...")
     sys.stdout.flush()
     
     try:
         while True:
             temp = get_temp()
-            duty = calculate_pwm(temp)
-            pwm.set_duty_cycle(duty)
+            speed_percent = calculate_speed(temp)
             
-            print(f"Temp: {temp:.1f}°C | PWM: {duty:.0f}%")
+            # Convert percentage to 0-255 range for PWM
+            pwm_value = int((speed_percent / 100.0) * 255)
+            
+            if pwm_value > 0:
+                fanshim.set_fan(True)
+                # Set PWM speed (0-255)
+                fanshim.fanshim.set_fan_pwm(pwm_value)
+                print(f"Temp: {temp:.1f}°C | PWM: {speed_percent}% ({pwm_value}/255)")
+            else:
+                fanshim.set_fan(False)
+                print(f"Temp: {temp:.1f}°C | Fan: OFF")
+            
             sys.stdout.flush()
             time.sleep(SLEEP_TIME)
             
@@ -124,9 +73,15 @@ def main():
         sys.exit(1)
     finally:
         print("Cleaning up...")
-        pwm.stop()
-        line_request.release()
+        fanshim.set_fan(False)
         print("Shutdown complete")
 
 if __name__ == "__main__":
     main()
+```
+
+**If that still clicks**, the issue is that even the Pimoroni library uses software PWM. The **best solution** for the original FanSHIM to avoid clicking is:
+
+**Increase the minimum PWM to 40-50%** - the fan physically can't run smoothly below a certain speed. Update your config:
+```
+pwm_min: 40  (or try 50, 60)
