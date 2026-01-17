@@ -11,13 +11,13 @@ RUN apk add --no-cache \
     linux-headers \
     git \
     libgpiod \
-    libgpiod-dev
+    libgpiod-dev \
+    py3-psutil
 
-# Install Python dependencies
-RUN pip3 install --no-cache-dir \
+# Install Python dependencies with break-system-packages flag
+RUN pip3 install --break-system-packages --no-cache-dir \
     RPi.GPIO \
-    gpiod \
-    psutil
+    gpiod
 
 # Copy run script
 COPY run.sh /
