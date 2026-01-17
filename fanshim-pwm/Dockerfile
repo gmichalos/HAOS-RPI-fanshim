@@ -1,29 +1,39 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
-
-# Install packages
-RUN apk add --no-cache \
-    python3 \
-    py3-pip
-
-# Install Python pigpio library
-RUN pip3 install --break-system-packages --no-cache-dir pigpio
-
-# Copy Python script
-COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
-
-# Create s6-overlay service structure
-RUN mkdir -p /etc/s6-overlay/s6-rc.d/fanshim && \
-    mkdir -p /etc/s6-overlay/s6-rc.d/user/contents.d
-
-# Create type file
-RUN echo "longrun" > /etc/s6-overlay/s6-rc.d/fanshim/type
-
-# Create run script
-RUN echo '#!/bin/sh' > /etc/s6-overlay/s6-rc.d/fanshim/run && \
-    echo 'echo "Starting FanSHIM PWM"' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
-    echo 'exec python3 -u /app/ha_fanshim_pwm.py' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
-    chmod +x /etc/s6-overlay/s6-rc.d/fanshim/run
-
-# Link service to user bundle
-RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/fanshim
+{
+  "name": "FanSHIM PWM",
+  "version": "1.9",
+  "slug": "fanshim-pwm",
+  "description": "Control the FanSHIM with PWM on Raspberry Pi 4",
+  "arch": ["aarch64"],
+  "startup": "application",
+  "boot": "auto",
+  "init": false,
+  "hassio_api": true,
+  "hassio_role": "default",
+  "options": {
+    "temp_min": 45,
+    "temp_max": 75,
+    "pwm_min": 20,
+    "pwm_max": 100,
+    "check_interval": 5,
+    "pwm_frequency": 25000,
+    "manual_control": false,
+    "hysteresis": 5
+  },
+  "schema": {
+    "temp_min": "int",
+    "temp_max": "int",
+    "pwm_min": "int",
+    "pwm_max": "int",
+    "check_interval": "int",
+    "pwm_frequency": "int",
+    "manual_control": "bool",
+    "hysteresis": "int"
+  },
+  "privileged": ["SYS_RAWIO"],
+  "devices": [
+    "/dev/gpiomem:/dev/gpiomem:rwm",
+    "/dev/gpiochip0:/dev/gpiochip0:rwm"
+  ],
+  "host_network": true,
+  "full_access": true
+}
