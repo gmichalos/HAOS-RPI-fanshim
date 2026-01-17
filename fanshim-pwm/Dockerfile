@@ -20,8 +20,6 @@ RUN pip3 install --break-system-packages --no-cache-dir \
 # Copy Python script
 COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
 
-# Copy run script
-COPY run.sh /app/run.sh
-RUN chmod a+x /app/run.sh
-
-CMD ["/app/run.sh"]
+# Copy and setup run script
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
