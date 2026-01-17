@@ -2,12 +2,53 @@
 import json
 import time
 import sys
-import pigpio
+import gpiod
+import threading
 
-PIN_FAN = 18  # GPIO18
+PIN_FAN = 18
+
+class SoftwarePWM:
+    def __init__(self, line, frequency=25000):
+        self.line = line
+        self.frequency = frequency
+        self.period = 1.0 / frequency
+        self.duty_cycle = 0
+        self.running = False
+        self.thread = None
+        
+    def start(self, duty_cycle=0):
+        self.duty_cycle = duty_cycle
+        self.running = True
+        self.thread = threading.Thread(target=self._pwm_loop, daemon=True)
+        self.thread.start()
+    
+    def set_duty_cycle(self, duty_cycle):
+        self.duty_cycle = max(0, min(100, duty_cycle))
+    
+    def stop(self):
+        self.running = False
+        if self.thread:
+            self.thread.join()
+        self.line.set_value(0)
+    
+    def _pwm_loop(self):
+        while self.running:
+            if self.duty_cycle > 0:
+                on_time = self.period * (self.duty_cycle / 100.0)
+                off_time = self.period - on_time
+                
+                if on_time > 0:
+                    self.line.set_value(1)
+                    time.sleep(on_time)
+                
+                if off_time > 0 and self.running:
+                    self.line.set_value(0)
+                    time.sleep(off_time)
+            else:
+                self.line.set_value(0)
+                time.sleep(self.period)
 
 def main():
-    # Load config
     try:
         with open("/data/options.json") as f:
             options = json.load(f)
@@ -21,23 +62,21 @@ def main():
     PWM_MAX = options.get("pwm_max", 100)
     SLEEP_TIME = options.get("check_interval", 5)
     
-    print(f"Starting FanSHIM PWM Control (pigpio)")
+    print(f"Starting FanSHIM Software PWM Control")
     print(f"Temperature range: {TEMP_LOW}°C - {TEMP_HIGH}°C")
     print(f"PWM range: {PWM_MIN}% - {PWM_MAX}%")
+    print(f"PWM frequency: 25kHz")
     print(f"Check interval: {SLEEP_TIME}s")
     sys.stdout.flush()
     
-    # Connect to pigpio daemon
-    print("Connecting to pigpio daemon...")
-    pi = pigpio.pi()
+    # Initialize GPIO
+    chip = gpiod.Chip('gpiochip0')
+    fan_line = chip.get_line(PIN_FAN)
+    fan_line.request(consumer="fanshim", type=gpiod.LINE_REQ_DIR_OUT)
     
-    if not pi.connected:
-        print("ERROR: Failed to connect to pigpio daemon!")
-        sys.exit(1)
-    
-    print("Connected! Initializing PWM...")
-    pi.set_PWM_frequency(PIN_FAN, 25000)  # 25kHz
-    pi.set_PWM_range(PIN_FAN, 100)  # 0-100 range
+    # Start software PWM
+    pwm = SoftwarePWM(fan_line, frequency=25000)
+    pwm.start(0)
     
     def get_temp():
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
@@ -52,21 +91,21 @@ def main():
             slope = (PWM_MAX - PWM_MIN) / (TEMP_HIGH - TEMP_LOW)
             return PWM_MIN + slope * (temp - TEMP_LOW)
     
-    print("FanSHIM PWM running...")
+    print("FanSHIM Software PWM running...")
     sys.stdout.flush()
     
     try:
         while True:
             temp = get_temp()
             duty = calculate_pwm(temp)
-            pi.set_PWM_dutycycle(PIN_FAN, int(duty))
+            pwm.set_duty_cycle(duty)
             
             print(f"Temp: {temp:.1f}°C | PWM: {duty:.0f}%")
             sys.stdout.flush()
             time.sleep(SLEEP_TIME)
             
     except KeyboardInterrupt:
-        print("Received interrupt signal, shutting down...")
+        print("Shutting down...")
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
@@ -74,8 +113,8 @@ def main():
         sys.exit(1)
     finally:
         print("Cleaning up...")
-        pi.set_PWM_dutycycle(PIN_FAN, 0)
-        pi.stop()
+        pwm.stop()
+        fan_line.release()
         print("Shutdown complete")
 
 if __name__ == "__main__":
