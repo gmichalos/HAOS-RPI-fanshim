@@ -8,13 +8,16 @@ RUN apk add --no-cache \
     gcc \
     musl-dev \
     python3-dev \
-    libgpiod \
-    libgpiod-dev \
-    py3-psutil
+    linux-headers \
+    git
 
-# Install Python packages
-RUN pip3 install --break-system-packages --no-cache-dir \
-    gpiod
+# Clone and install fanshim-python library
+RUN cd /tmp && \
+    git clone https://github.com/pimoroni/fanshim-python.git && \
+    cd fanshim-python && \
+    python3 -m pip install --break-system-packages . && \
+    cd .. && \
+    rm -rf fanshim-python
 
 # Copy Python script
 COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
