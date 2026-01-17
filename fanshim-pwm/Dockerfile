@@ -6,8 +6,8 @@ RUN apk add --no-cache \
     python3 \
     py3-pip
 
-# Install Python libraries
-RUN pip3 install --break-system-packages --no-cache-dir pigpio paho-mqtt
+# Install Python pigpio library
+RUN pip3 install --break-system-packages --no-cache-dir pigpio
 
 # Copy Python script
 COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
