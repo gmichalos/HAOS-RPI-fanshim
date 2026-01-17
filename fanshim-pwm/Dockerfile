@@ -27,9 +27,11 @@ RUN mkdir -p /etc/s6-overlay/s6-rc.d/fanshim && \
 # Create type file
 RUN echo "longrun" > /etc/s6-overlay/s6-rc.d/fanshim/type
 
-# Copy run script
-COPY rootfs/etc/s6-overlay/s6-rc.d/fanshim/run /etc/s6-overlay/s6-rc.d/fanshim/run
-RUN chmod +x /etc/s6-overlay/s6-rc.d/fanshim/run
+# Create run script directly in Dockerfile
+RUN echo '#!/bin/sh' > /etc/s6-overlay/s6-rc.d/fanshim/run && \
+    echo 'echo "Starting FanSHIM PWM"' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
+    echo 'exec python3 -u /app/ha_fanshim_pwm.py' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/fanshim/run
 
 # Link service to user bundle
 RUN touch /etc/s6-overlay/s6-rc.d/user/contents.d/fanshim
