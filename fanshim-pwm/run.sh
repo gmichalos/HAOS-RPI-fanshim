@@ -1,13 +1,15 @@
-#!/bin/bash
+#!/usr/bin/with-contenv bashio
 set -e
 
-echo "Starting FanSHIM PWM..."
+bashio::log.info "Starting FanSHIM PWM..."
 
 # Wait for GPIO
 while [ ! -e /dev/gpiomem ]; do
-  echo "Waiting for /dev/gpiomem..."
+  bashio::log.info "Waiting for /dev/gpiomem..."
   sleep 1
 done
 
-echo "GPIO available, starting service"
-python3 /app/ha_fanshim_pwm.py
+bashio::log.info "GPIO available"
+
+# Use exec to replace shell with python process
+exec python3 /app/ha_fanshim_pwm.py
