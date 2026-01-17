@@ -63,11 +63,12 @@ def main():
     PWM_MIN = options.get("pwm_min", 20)
     PWM_MAX = options.get("pwm_max", 100)
     SLEEP_TIME = options.get("check_interval", 5)
+    PWM_FREQ = options.get("pwm_frequency", 25000)
     
     print(f"Starting FanSHIM Software PWM Control")
     print(f"Temperature range: {TEMP_LOW}°C - {TEMP_HIGH}°C")
     print(f"PWM range: {PWM_MIN}% - {PWM_MAX}%")
-    print(f"PWM frequency: 25kHz")
+    print(f"PWM frequency: {PWM_FREQ}Hz") 
     print(f"Check interval: {SLEEP_TIME}s")
     sys.stdout.flush()
     
@@ -84,7 +85,8 @@ def main():
     sys.stdout.flush()
     
     # Start software PWM
-    pwm = SoftwarePWM(line_request, PIN_FAN, frequency=25000)
+    pwm = SoftwarePWM(line_request, PIN_FAN, frequency=PWM_FREQ)  
+
     pwm.start(0)
     
     def get_temp():
