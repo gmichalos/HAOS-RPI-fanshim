@@ -10,12 +10,13 @@ RUN apk add --no-cache \
     python3-dev \
     libgpiod \
     libgpiod-dev \
-    py3-psutil
+    py3-psutil \
+    pigpio \
+    pigpio-dev
 
 # Install Python packages
 RUN pip3 install --break-system-packages --no-cache-dir \
-    RPi.GPIO \
-    gpiod
+    pigpio
 
 # Copy Python script
 COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
@@ -30,6 +31,8 @@ RUN echo "longrun" > /etc/s6-overlay/s6-rc.d/fanshim/type
 # Create run script directly in Dockerfile
 RUN echo '#!/bin/sh' > /etc/s6-overlay/s6-rc.d/fanshim/run && \
     echo 'echo "Starting FanSHIM PWM"' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
+    echo 'pigpiod' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
+    echo 'sleep 1' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
     echo 'exec python3 -u /app/ha_fanshim_pwm.py' >> /etc/s6-overlay/s6-rc.d/fanshim/run && \
     chmod +x /etc/s6-overlay/s6-rc.d/fanshim/run
 
