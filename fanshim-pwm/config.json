@@ -1,12 +1,14 @@
 {
   "name": "FanSHIM PWM",
-  "version": "1.3",
+  "version": "1.4",
   "slug": "fanshim-pwm",
   "description": "Control the FanSHIM with PWM on Raspberry Pi 4",
   "arch": ["aarch64"],
   "startup": "application",
   "boot": "auto",
   "init": false,
+  "hassio_api": false,
+  "hassio_role": "default",
   "options": {
     "temp_min": 45,
     "temp_max": 75,
@@ -23,6 +25,5 @@
   },
   "privileged": ["SYS_RAWIO"],
   "devices": ["/dev/gpiomem:/dev/gpiomem:rwm"],
-  "host_network": true,
-  "stdin": false
+  "host_network": true
 }
