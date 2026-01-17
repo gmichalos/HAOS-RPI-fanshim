@@ -1,13 +1,13 @@
 {
   "name": "FanSHIM PWM",
-  "version": "1.7",
+  "version": "1.9",
   "slug": "fanshim-pwm",
   "description": "Control the FanSHIM with PWM on Raspberry Pi 4",
   "arch": ["aarch64"],
   "startup": "application",
   "boot": "auto",
   "init": false,
-  "hassio_api": false,
+  "hassio_api": true,
   "hassio_role": "default",
   "options": {
     "temp_min": 45,
@@ -15,7 +15,9 @@
     "pwm_min": 20,
     "pwm_max": 100,
     "check_interval": 5,
-    "pwm_frequency": 25000
+    "pwm_frequency": 25000,
+    "manual_control": false,
+    "hysteresis": 5
   },
   "schema": {
     "temp_min": "int",
@@ -23,7 +25,9 @@
     "pwm_min": "int",
     "pwm_max": "int",
     "check_interval": "int",
-    "pwm_frequency": "int"
+    "pwm_frequency": "int",
+    "manual_control": "bool",
+    "hysteresis": "int"
   },
   "privileged": ["SYS_RAWIO"],
   "devices": [
