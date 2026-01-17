@@ -6,3 +6,4 @@ bashio::log.info "========================================="
 
 # Run Python script
 exec python3 -u /ha_fanshim_pwm.py
+
