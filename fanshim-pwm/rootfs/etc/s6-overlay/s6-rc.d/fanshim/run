@@ -1,4 +1,4 @@
-#!/command/with-contenv bash
+#!/command/with-contenv sh
 
 echo "Starting FanSHIM PWM"
 exec python3 -u /app/ha_fanshim_pwm.py
