@@ -22,11 +22,6 @@ COPY ha_fanshim_pwm.py /app/ha_fanshim_pwm.py
 
 # Copy rootfs
 COPY rootfs /
-```
+
 # Make run script executable
 RUN chmod +x /etc/s6-overlay/s6-rc.d/fanshim/run
-
-
-**3. Create `rootfs/etc/s6-overlay/s6-rc.d/fanshim/type` with just this text:**
-```
-longrun
