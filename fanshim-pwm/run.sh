@@ -1,20 +1,14 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/with-contenv bashio
 
-# Ensure config folder exists
-mkdir -p /config/fanshim
+bashio::log.info "Starting FanSHIM PWM..."
 
-# Wait until GPIO port is available
-i=0
-while [ ! -e /dev/gpiomem ] && [ $i -lt 30 ]; do
-  echo "Waiting for /dev/gpiomem..."
+# Wait for GPIO
+while [ ! -e /dev/gpiomem ]; do
+  bashio::log.info "Waiting for /dev/gpiomem..."
   sleep 1
-  i=$((i+1))
 done
 
-if [ ! -e /dev/gpiomem ]; then
-  echo "/dev/gpiomem not found: the addon needs access to the Pi GPIO (run on Pi or ensure device mapping)."
-  exit 1
-fi
+bashio::log.info "GPIO available, starting service"
 
+# Run with exec
 exec python3 /data/ha_fanshim_pwm.py
