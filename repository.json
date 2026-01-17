@@ -1,7 +1,7 @@
 {
-  "name": "HA-RPI-fanshim",
-  "slug": "ha_rpi_fanshim",
+  "name": "HAOS-RPI-fanshim",
+  "slug": "haos_rpi_fanshim",
   "description": "FanSHIM PWM Add-on for Home Assistant",
-  "url": "https://github.com/melvinmajor/HA-RPI-fanshim",
-  "maintainer": "Melvin Campos Casares (melvinmajor)"
+  "url": "https://github.com/gmichalos/HAOS-RPI-fanshim/",
+  "maintainer": "GM but forked from melvinmajor"
 }
