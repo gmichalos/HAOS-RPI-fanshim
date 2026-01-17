@@ -19,6 +19,7 @@ RUN pip3 install --break-system-packages --no-cache-dir \
     RPi.GPIO \
     gpiod
 
-# Copy data
+# Copy Python script and run script
+COPY ha_fanshim_pwm.py /data/
 COPY run.sh /
 RUN chmod a+x /run.sh
