@@ -1,22 +1,27 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/raspberrypi4-64-homeassistant:stable
+ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Install needed packages
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      build-essential git libgpiod2 libgpiod-dev python3-dev ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    gcc \
+    musl-dev \
+    python3-dev \
+    linux-headers \
+    git \
+    libgpiod \
+    libgpiod-dev
 
-# Install Python libs
-RUN pip3 install --no-cache-dir rpi-fanshim psutil
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+    RPi.GPIO \
+    gpiod \
+    psutil
 
-# Create data folder
-WORKDIR /data
-
-# Copy files
-COPY run.sh /run.sh
-COPY ha_fanshim_pwm.py /data/ha_fanshim_pwm.py
-
+# Copy run script
+COPY run.sh /
 RUN chmod a+x /run.sh
 
+# Run
 CMD [ "/run.sh" ]
