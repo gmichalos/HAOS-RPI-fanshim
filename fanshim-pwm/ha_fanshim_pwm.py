@@ -5,13 +5,13 @@ import sys
 import gpiod
 from gpiod.line import Direction, Value
 import threading
-import os
 
 PIN_FAN = 18
 
 class SoftwarePWM:
-    def __init__(self, line, frequency=25000):
-        self.line = line
+    def __init__(self, line_request, pin, frequency=25000):
+        self.line_request = line_request
+        self.pin = pin
         self.frequency = frequency
         self.period = 1.0 / frequency
         self.duty_cycle = 0
@@ -31,7 +31,7 @@ class SoftwarePWM:
         self.running = False
         if self.thread:
             self.thread.join()
-        self.line.set_value(Value.INACTIVE)
+        self.line_request.set_value(self.pin, Value.INACTIVE)
     
     def _pwm_loop(self):
         while self.running:
@@ -40,14 +40,14 @@ class SoftwarePWM:
                 off_time = self.period - on_time
                 
                 if on_time > 0:
-                    self.line.set_value(Value.ACTIVE)
+                    self.line_request.set_value(self.pin, Value.ACTIVE)
                     time.sleep(on_time)
                 
                 if off_time > 0 and self.running:
-                    self.line.set_value(Value.INACTIVE)
+                    self.line_request.set_value(self.pin, Value.INACTIVE)
                     time.sleep(off_time)
             else:
-                self.line.set_value(Value.INACTIVE)
+                self.line_request.set_value(self.pin, Value.INACTIVE)
                 time.sleep(self.period)
 
 def main():
@@ -84,7 +84,7 @@ def main():
     sys.stdout.flush()
     
     # Start software PWM
-    pwm = SoftwarePWM(line_request, frequency=25000)
+    pwm = SoftwarePWM(line_request, PIN_FAN, frequency=25000)
     pwm.start(0)
     
     def get_temp():
